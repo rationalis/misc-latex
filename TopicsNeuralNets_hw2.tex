@@ -1,0 +1,164 @@
+\documentclass{article} % For LaTeX2e
+\usepackage{nips15submit_e,times}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{physics}
+% \documentstyle[nips14submit_09,times,art10]{article} % For LaTeX 2.09
+
+
+\title{HW2 Individual}
+
+
+\author{
+  Jimmy Ye\\
+  CSE 190: Neural Networks\\
+  University of California, San Diego\\
+  \texttt{jiy162@ucsd.edu} \\
+}
+
+% The \author macro works with any number of authors. There are two commands
+% used to separate the names and addresses of multiple authors: \And and \AND.
+% 
+% Using \And between authors leaves it to \LaTeX{} to determine where to break
+% the lines. Using \AND forces a linebreak at that point. So, if \LaTeX{}
+% puts 3 of 4 authors names on the first line, and the last on the second
+% line, try using \AND instead of \And before the third author name.
+
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}}
+\newcommand{\argmin}{\operatorname{argmin}}
+
+\nipsfinalcopy % Uncomment for camera-ready version
+
+\begin{document}
+
+
+\maketitle
+
+\section{}
+
+Prove that finding the optimal parameter $w$ for linear regression for modeling
+$t = h(x) + \epsilon$ with $\epsilon$ Gaussian-random is equivalent to finding
+the $w^*$ that minimizes the SSE.
+
+First, we assume that we are looking for the optimal parameter in regards to
+maximum likelihood, which is equivalent to minimizing the negative log
+likelihood:
+
+\begin{align}
+  w^*
+  &= \argmin_w - \sum_{n=1}^N (\ln p(t^n | x^n) + \ln p(x^n))\\
+  &= \argmin_w - \sum_{n=1}^N (\ln p(t^n | x^n))
+  && p(x^n) \text{ constant w.r.t. } w\\
+  &= \argmin_w - \sum_{n=1}^N \Big(\ln (\frac{1}{\sqrt{2 \pi \sigma^2}} e^{-\frac{(t^n - h(x^n))^2}{2 \sigma^2}})\Big)
+  && \text{By distribution of } t\\
+  &= \argmin_w - \sum_{n=1}^N \Big(\ln (\frac{1}{\sqrt{2 \pi \sigma^2}}) - \frac{(t^n - h(x^n))^2}{2 \sigma^2}\Big)
+  && \text{Logarithm properties}\\
+  &= \argmin_w - \sum_{n=1}^N \Big(- \frac{(t^n - h(x^n))^2}{2}\Big)
+  && \text{Constants w.r.t } w\\
+  &= \argmin_w \frac{1}{2} \sum_{n=1}^N (t^n - h(x^n))^2
+\end{align}
+
+\newpage
+
+\section{}
+
+For this problem, we are using a network with three layers: an input layer, a
+hidden layer consisting of J units with the sigmoid activation function, and a
+softmax output layer.
+
+Note that we will use $E$ instead of $E^n$ in (2a) and (2b) to simplify notation.
+
+\subsection{Derivation}
+
+Derive the expression for $\delta$ for both the units of output layer
+($\delta_k$) and the hidden layer ($\delta_j$). Recall that the definition of
+$\delta$ is $\delta_i = -\pdv{E}{a_i}$, where $a_i$ is the weighted sum of the
+inputs to unit $i$.
+
+For the output layer:
+%
+\begin{align}
+  - \pdv{E}{w_{jk}} &= - \pdv{E}{a_k} \pdv{a_k}{w_{jk}}
+  && \text{Chain rule}\\
+  &= - \pdv{E}{a_k} y_j\\
+  &= (t_k - y_k) y_j
+  && \text{From previous HW: softmax regression}\\
+  \delta_k = - \pdv{E}{a_k} &= t_k - y_k
+\end{align}
+
+For the hidden layer:
+%
+\begin{align}
+  \delta_j
+  &= - \pdv{E}{a_j}\\
+  &= - \sum_{k \in \text{outputs}} \Big(\pdv{E}{a_k} \pdv{a_k}{a_j})
+  && \text{Chain rule}\\
+  &= \sum_{k \in \text{outputs}} \Big(\delta_k \pdv{a_k}{a_j}\Big)\\
+  &= \sum_{k \in \text{outputs}} \Big(\delta_k \pdv{a_k}{y_j} \pdv{y_j}{a_j}\Big)
+  && \text{Chain rule}\\
+  &= \sum_{k \in \text{outputs}} (\delta_k w_{jk} y_j')\\
+  &= y_j' \sum_{k \in \text{outputs}} (\delta_k w_{jk})\\
+  &= y_j (1 - y_j) \sum_{k \in \text{outputs}} (\delta_k w_{jk})
+  && \text{From previous HW: logistic regression}
+\end{align}
+
+\subsection{Update rule}
+
+Derive the update rule for $w_{ij}$ and $w_{jk}$ using learning rate $\alpha$,
+starting with the gradient descent rule. The derivative should take into account
+all of the outputs.
+
+Starting with gradient descent:
+%
+\begin{align}
+  w_{jk}
+  &= w_{jk} - \alpha \pdv{E}{w_{jk}}\\
+  &= w_{jk} - \alpha \pdv{E}{a_k} \pdv{a_k}{w_{jk}}
+  && \text{Chain rule}\\
+  &= w_{jk} + \alpha \delta_k y_j
+\end{align}
+
+
+And similarly, for $w_{ij}$, we get $w_{ij} + \alpha \delta_j x_i$.
+
+\pagebreak
+
+Plugging in $\delta$ from the previous part, for the output layer we get the
+update rule
+%
+$$w_{jk} = w_{jk} + \alpha (t_k - y_k) y_j$$
+and for the hidden layer we get
+%
+$$w_{ij} = w_{ij} + \alpha x_i y_j (1 - y_j) \sum_{k \in \text{outputs}} (\delta_k w_{jk})$$
+
+\subsection{Vectorize computation}
+
+The computation is much faster when you update all the weights at the same time
+using matrix multiplication rather than for loops. Please show the update rule
+for the weight matrix from hidden layer to output layer and the matrix from
+input layer to hidden layer, using matrix/vector notation.
+
+Notes:\\
+$y_j$ is now used for the vector of the hidden layer's outputs, rather than one
+specific hidden unit's.\\
+$t$ is used for the vector of the target output, and $y$ is used for the vector
+of the output layer's outputs.\\
+$\pmb{1}$ is the $j \cross 1$ vector with all elements equal to 1.\\
+$A \circ B$ is the element-wise product of vectors/matrices.
+
+Let $W^0$ and $W^1$ be the input-to-hidden and hidden-to-output weight matrices,
+respectively.
+
+Then the hidden-to-output matrix update rule is:
+
+$W^1 = W^1 + \alpha y_j (t - y)^\top$
+
+And the input-to-hidden matrix update rule is:
+
+$W^0 = W^0 + \alpha x (y_j \circ (\pmb{1} - y_j) \circ W^1 (t - y))^\top$
+
+
+\end{document}

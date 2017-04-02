@@ -1,0 +1,183 @@
+\documentclass{article} % For LaTeX2e
+\usepackage{nips15submit_e,times}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{physics}
+% \documentstyle[nips14submit_09,times,art10]{article} % For LaTeX 2.09
+
+
+\title{HW1 Individual}
+
+
+\author{
+  Jimmy Ye\\
+  CSE 190: Neural Networks\\
+  University of California, San Diego\\
+  \texttt{jiy162@ucsd.edu} \\
+}
+
+% The \author macro works with any number of authors. There are two commands
+% used to separate the names and addresses of multiple authors: \And and \AND.
+% 
+% Using \And between authors leaves it to \LaTeX{} to determine where to break
+% the lines. Using \AND forces a linebreak at that point. So, if \LaTeX{}
+% puts 3 of 4 authors names on the first line, and the last on the second
+% line, try using \AND instead of \And before the third author name.
+
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}}
+
+\nipsfinalcopy % Uncomment for camera-ready version
+
+\begin{document}
+
+
+\maketitle
+
+\section{Perceptrons}
+
+\subsection{}
+
+Assuming d=2, derive the equation for the line that is the decision boundary.
+%
+\begin{align}
+  y(x) &= 0\\
+  w_1x_1 + w_2x_2 + w_0 &= 0\\
+  w_2x_2 &= -w_1x_1 - w_0\\
+  x_2 &= -(\frac{w_1}{w_2})x_1 - \frac{w_0}{w_2}
+\end{align}
+
+
+\subsection{}
+
+Prove that the distance from the decision boundary to the origin is given by:
+%
+\[l = \frac{w^\top x}{\lVert w \rVert}\]
+
+Note that this is for $x$ on the decision boundary, so from $w^\top x + w_0 = 0$, we
+get $l = \frac{w^\top x}{\lVert w \rVert} = \frac{-w_0}{\lVert w \rVert}$.
+
+We know that $w$ is orthogonal to the decision boundary. Then the desired
+distance, by definition of distance from a point to a line, is given by the
+scalar $c$ s.t. $c \hat{w}$ is on the line (where
+$\hat{w}=\frac{w}{\lVert w \rVert}$, the unit vector parallel to $w$).
+
+So, let $x = c \hat{w}$ in equation (4). Then
+\begin{align}
+  c \frac{w_2}{\lVert w \rVert} &= -\frac{cw_1w_1}{w_2\lVert w \rVert} - \frac{w_0}{w_2}\\
+  c \frac{w_2}{\lVert w \rVert} + c\frac{w_1w_1}{w_2\lVert w \rVert} &= - \frac{w_0}{w_2}\\
+  c (w_2 + \frac{w_1w_1}{w_2}) &= - \lVert w \rVert \frac{w_0}{w_2}\\
+  c (w_2w_2 + w_1w_1) &= - \lVert w \rVert w_0\\
+  c &= - \frac{w_0}{\lVert w \rVert}
+\end{align}
+
+\subsection{}
+
+Write down the perceptron learning rule as an update equation.
+
+$w_i = w_i + \alpha (t - y) x_i$, where $\alpha$ is the learning rate, $t$ is
+the target output, and $y$ is the current output.
+
+\subsection{}
+
+Initialize $w_1, w_2$ and $\theta$ to be 0 and fix the learning rate to 1, and
+train the perceptron to learn NAND, adding one row for each ''randomly''
+selected pattern. Stop when the learning converges.
+
+\begin{tabular}{|c|c|c|c|c|c|c|c|}
+  \hline
+  $x_1$ & $x_2$ & Net & Output & Teacher & $w_1$ & $w_2$ & Threshold $\theta (= -w_0)$  \\ \hline
+  1 & 1 & 0 & 1 & 0 & -1 & -1 & -1\\ \hline
+\end{tabular}
+
+\subsection{}
+
+Is the solution unique? Why or why not?
+
+No, other possible weights are valid solutions, like $w_0 = 2, w_1 = -2, w_2 =
+-2$, which could be reached with the same training example if we instead used a
+training rate of 2.
+
+\section{Logistic Regression}
+
+Show that the gradient of the Cross Entropy cost function for the logistic
+activation function is:
+
+\[
+- \pdv{E(w)}{w_j} = \sum_{n=1}^{N}(t^n - y^n)x_j^n
+\]
+
+First, let's calculate $\pdv{y^n}{w_j}$:
+
+\begin{align}
+  \pdv{y^n}{w_j}
+  &= \frac{\pdv{}{w_j} (1 + e^{- w^\top x})}{(1+e^{-w^\top x})^2} && \text{Quotient rule}\\
+  &= \frac{- x_j^n e^{- w^\top x}}{(1+e^{-w^\top x})^2}\\
+  &= x_j^n \frac{1}{1 + e^{-w^\top x}} \frac{-e^{-w^\top x}}{1 + e^{-w^\top x}}\\
+  &= x_j^n y^n (1 - y^n)
+\end{align}
+
+And calculating the desired gradient:
+
+\begin{align}
+  - \pdv{E(w)}{w_j}
+  &= \pdv{}{w_j} \Big[\sum_{n=1}^{N}(t^n \ln(y^n) + (1 - t^n) \ln(1 - y^n))\Big]
+  && \text{Substituting $E(w)$}\\
+  &= \sum_{n=1}^{N} \Big[\pdv{}{w_j} (t^n \ln(y^n) + (1 - t^n) \ln(1 - y^n))\Big]
+  && \text{Linearity of derivative}\\
+  &= \sum_{n=1}^{N} \Big[t^n \pdv{}{w_j}\ln(y^n) + (1 - t^n) \pdv{}{w_j} \ln(1 - y^n)\Big]
+  && \text{Linearity of derivative}\\
+  &= \sum_{n=1}^{N} \Big[\frac{t^n}{y^n} \pdv{y^n}{w_j} + \frac{1 - t^n}{1 - y^n} \pdv{(1 - y^n)}{w_j}\Big]
+  && \text{Derivative of ln}\\
+  &= \sum_{n=1}^{N} \Big[x_j^n t^n (1 - y^n) - x_j^n y^n (1 - t^n)\Big]
+  && \text{Using (13)}\\
+  &= \sum_{n=1}^{N} \Big[(t^n - y^n)x_j^n\Big]
+\end{align}
+
+\section{Softmax Regression}
+
+Show that the gradient of the Cross Entropy cost function for softmax regression
+is:
+
+\[
+- \pdv{E(w)}{w_{jk}} = \sum_{n=1}^{N}(t_k^n - y_k^n)x_j^n
+\]
+
+Let $a_k^n = exp(w_k^\top x^n)$.
+
+First, let's calculate $\pdv{}{w_{jk}}\ln(y_i^n)$:
+
+\begin{align}
+  \pdv{}{w_{jk}} \ln(y_i^n)
+  &= \pdv{}{w_{jk}} \ln(\frac{a_i^n}{\sum_{h=1}^c a_h^n})
+  && \text{Substituting $y_k^n$}\\
+  &= \pdv{}{w_{jk}} \Big(\ln(a_i^n) - \ln(\sum_{h=1}^c a_h^n)\Big)
+  && \text{Logarithm property}\\
+  &= \pdv{}{w_{jk}} \ln(a_i^n) - \pdv{}{w_{jk}} \ln(\sum_{h=1}^c a_h^n)
+  && \text{Linearity of derivative}
+\end{align}
+
+Note that $\pdv{a_i^n}{w_{jk}}$ is $x_j^n a_k^n$ when $i = k$, and is 0
+otherwise. Thus, when $i = k$, the first term is $x_n^n a_k^n / a_k^n = x_j^n$,
+otherwise it is $0$, and the second term is always $x_j^n y_k^n$.\\
+
+Calculating the desired gradient:
+
+\begin{align}
+  - \pdv{E(w)}{w_{jk}}
+  &= \pdv{}{w_{jk}} \Big[\sum_{n=1}^{N} \sum_{i=1}^{c} t_i^n \ln(y_i^n)\Big]
+  && \text{Substituting $E(w)$}\\
+  &= \sum_{n=1}^{N} \sum_{i=1}^{c} \Big[t_i^n \pdv{}{w_{jk}} \ln(y_i^n)\Big]
+  && \text{Linearity of derivative}\\
+  &= \sum_{n=1}^{N} \Big[t_k^n x_j^n - \sum_{i=1}^{c} t_i^n x_j^n y_k^n\Big]
+  && \text{Using (22)}\\
+  &= \sum_{n=1}^{N} \Big[t_k^n x_j^n - x_j^n y_k^n\Big]
+  && \text{One-hot encoding: there is a unique $t_i = 1$}\\
+  &= \sum_{n=1}^{N} \Big[(t_k^n - y_k^n) x_j^n\Big]
+  && \text{}
+\end{align}
+
+
+\end{document}
